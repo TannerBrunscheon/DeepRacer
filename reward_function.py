@@ -91,19 +91,19 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
         if throttle != 1:
             reward *= throttle;
         if abs(steering) >.1:
-            reward *= abs(steering);
+            reward *= 1- abs(steering);
         if is_left_of_center:
             if (distance_from_center >0 and distance_from_center< track_width/4):
-                reward *= 50000
+                reward *= 1.4
             else:
-                reward -= 50000
+                reward *= .9
         else:
             if (distance_from_center >0 and distance_from_center <track_width/8):
-                reward +=10000
+                reward *= 1.1
             elif(distance_from_center>track_width/8 and distance_from_center<track_width*3/8):
-                #Do nothing
+                pass
             else:
-                reward -=50000
+                reward *=.9
                 
     ##########
     # Around Curve
@@ -117,17 +117,8 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
         elif abs(car_orientation - next_waypoint_yaw) < math.radians(10) and abs(steering) > ABS_STEERING_THRESHOLD:    # penalize if stearing to much
             reward *= ABS_STEERING_THRESHOLD / abs(steering)
         else:
-            reward *= 1 + (10 - (abs(car_orientation - next_waypoint_yaw) / 10))   
+            reward *= (1 + (10 - (abs(car_orientation - next_waypoint_yaw) / 10)))
             
-
-
-    # Add penalty for wrong direction
-    
-
-
-
-    
-    # Add penalty if throttle exsides the steering else add reward
 
 
     # make sure reward value returned is within the prescribed value range.
