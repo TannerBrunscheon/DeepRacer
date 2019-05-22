@@ -121,7 +121,7 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
 
 
     # make sure reward value returned is within the prescribed value range.
-    reward = max(reward, REWARD_MIN)
+    reward = max(reward, .01)
     reward = min(reward, REWARD_MAX)
 
     return float(reward)
