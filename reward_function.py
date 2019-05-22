@@ -1,4 +1,4 @@
-def reward_function(on_track, x, y, distance_from_center, car_orientation, progress, steps, throttle, steering, track_width, waypoints, is_left_of_center, closest_waypoint):
+def reward_function(params):
 
     '''
     @on_track (boolean) :: The vehicle is off-track if the front of the vehicle is outside of the white
@@ -36,12 +36,24 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
 
     @@output: @reward (float [-1e5, 1e5])
     '''
-
-
+    on_track = params["on_track"]
+    x = params["x"]
+    y = params["y"]
+    distance_from_center = params["distance_from_center"]
+    car_orientation = params["car_orientation"]
+    progress = params["progress"]
+    steps = params["steps"]
+    throttle = params["throttle"]
+    steering = params["steering"]
+    track_width = params["track_width"]
+    waypoints = params["waypoints"]
+    is_left_of_center = params["is_left_of_center"]
+    closest_waypoint = params["closest_waypoint"]
     '''
     Ideas:
     Incentivize throttle on straight aways by looking ahead on yaws to detect straight aways
     Incentivize being on the left side being 3/8ths from the wall
+    With this model we only use positive reenforcement
     
     '''
     import math
@@ -51,7 +63,7 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
     # Settings
     ##########
     # Min / Max Reward
-    REWARD_MIN = -1e5
+    REWARD_MIN = .01
     REWARD_MAX = 1e5
     # Define the Area each side of the center that the card can use.
     # Later version might consider adjust this so that it can hug corners
@@ -72,7 +84,7 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
         reward = REWARD_MAX
         return reward
     else:        # we want the vehicle to continue making progress
-        reward = REWARD_MAX * (progress + .00001)
+        reward = REWARD_MAX * max(progress + REWARD_MIN)
     
     #Check is Turning
     correction= 0
@@ -112,7 +124,7 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
         if abs(steering) > .5 and abs(steering > throttle):
             reward *= max((1 - (steering - throttle),.01))
         if abs(car_orientation - next_waypoint_yaw) >= math.radians(10):
-            reward *= max((1 - (abs(car_orientation - next_waypoint_yaw) / 180),.01)))
+            reward *= max((1 - (abs(car_orientation - next_waypoint_yaw) / 180),.01))
         elif abs(car_orientation - next_waypoint_yaw) < math.radians(10) and abs(steering) > ABS_STEERING_THRESHOLD:    # penalize if stearing to much
             reward *= (ABS_STEERING_THRESHOLD / abs(steering))
         else:
@@ -121,7 +133,7 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
 
 
     # make sure reward value returned is within the prescribed value range.
-    reward = max(reward, .01)
+    reward = max(reward, REWARD_MIN)
     reward = min(reward, REWARD_MAX)
 
     return float(reward)
