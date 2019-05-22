@@ -89,9 +89,9 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
         ##########
     if correction == 0:
         if throttle != 1:
-            reward *= throttle;
+            reward *= max(throttle,.01);
         if abs(steering) >.1:
-            reward *= 1- abs(steering);
+            reward *= max(1-abs(steering),.01);
         if is_left_of_center:
             if (distance_from_center >0 and distance_from_center< track_width/4):
                 reward *= 1.4
@@ -110,14 +110,13 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
     ##########
     else:
         if abs(steering) > .5 and abs(steering > throttle):
-            reward *= 1 - (steering - throttle)  
-            
+            reward *= max((1 - (steering - throttle),.01))
         if abs(car_orientation - next_waypoint_yaw) >= math.radians(10):
-            reward *= 1 - (abs(car_orientation - next_waypoint_yaw) / 180)
+            reward *= max((1 - (abs(car_orientation - next_waypoint_yaw) / 180),.01)))
         elif abs(car_orientation - next_waypoint_yaw) < math.radians(10) and abs(steering) > ABS_STEERING_THRESHOLD:    # penalize if stearing to much
-            reward *= ABS_STEERING_THRESHOLD / abs(steering)
+            reward *= (ABS_STEERING_THRESHOLD / abs(steering))
         else:
-            reward *= (1 + (10 - (abs(car_orientation - next_waypoint_yaw) / 10)))
+            reward *= max((1 + (10 - (abs(car_orientation - next_waypoint_yaw) / 10))),.01)
             
 
 
