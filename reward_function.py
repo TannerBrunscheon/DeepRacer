@@ -84,9 +84,9 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
     if(abs(next_next_waypoint_yaw - next_waypoint_yaw) > math.radians(2)):
         correction +=.5
     
-        ##########
-        # On straight
-        ##########
+    ##########
+    # On straight
+    ##########
     if correction == 0:
         if throttle != 1:
             reward *= max(throttle,.01);
