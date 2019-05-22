@@ -72,7 +72,7 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
         reward = REWARD_MAX
         return reward
     else:        # we want the vehicle to continue making progress
-        reward = REWARD_MAX * progress
+        reward = REWARD_MAX * (progress + .00001)
     
     #Check is Turning
     correction= 0
@@ -89,12 +89,12 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
         ##########
     if correction == 0:
         if throttle != 1:
-            reward *= 1 - throttle;
+            reward *= throttle;
         if abs(steering) >.1:
-            reward *= steering;
+            reward *= abs(steering);
         if is_left_of_center:
             if (distance_from_center >0 and distance_from_center< track_width/4):
-                reward += 50000
+                reward *= 50000
             else:
                 reward -= 50000
         else:
