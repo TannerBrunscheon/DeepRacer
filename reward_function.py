@@ -1,4 +1,4 @@
-def reward_function(on_track, x, y, distance_from_center, car_orientation, progress, steps, throttle, steering, track_width, waypoints, closest_waypoint):
+def reward_function(on_track, x, y, distance_from_center, car_orientation, progress, steps, throttle, steering, track_width, waypoints, is_left_of_center, closest_waypoint):
 
     '''
     @on_track (boolean) :: The vehicle is off-track if the front of the vehicle is outside of the white
@@ -31,10 +31,19 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
 
     @closest_waypoint (int) :: index of the closest waypoint (0-indexed) given the car's x,y
     position as measured by the eucliedean distance
+    
+    @is_left_of_center (bool) :: is left of center
 
     @@output: @reward (float [-1e5, 1e5])
     '''
 
+
+    '''
+    Ideas:
+    Incentivize throttle on straight aways by looking ahead on yaws to detect straight aways
+    Incentivize being on the left side being 3/8ths from the wall
+    
+    '''
     import math
     from statistics import mean
 
@@ -64,29 +73,62 @@ def reward_function(on_track, x, y, distance_from_center, car_orientation, progr
         return reward
     else:        # we want the vehicle to continue making progress
         reward = REWARD_MAX * progress
-
-    # If outside track center than penalize
-    if distance_from_center > 0.0 and distance_from_center > CENTER_LANE:
-        reward *= 1 - (distance_from_center / HALF_TRACK)
-
+    
+    #Check is Turning
+    correction= 0
+    waypoint_yaw = waypoints[closest_waypoint][-1]
+    next_waypoint_yaw = waypoints[min(closest_waypoint+1, len(waypoints)-1)][-1]
+    next_next_waypoint_yaw = waypoints[min(closest_waypoint+2, len(waypoints)-1)][-1]
+    if(abs(waypoint_yaw - next_waypoint_yaw) > math.radians(2)):
+        correction +=.5
+    if(abs(next_next_waypoint_yaw - next_waypoint_yaw) > math.radians(2)):
+        correction +=.5
+    
+        ##########
+        # On straight
+        ##########
+    if correction == 0:
+        if throttle != 1:
+            reward *= 1 - throttle;
+        if abs(steering) >.1:
+            reward *= steering;
+        if is_left_of_center:
+            if (distance_from_center >0 and distance_from_center< track_width/4):
+                reward += 50000
+            else:
+                reward -= 50000
+        else:
+            if (distance_from_center >0 and distance_from_center <track_width/8):
+                reward +=10000
+            elif(distance_from_center>track_width/8 and distance_from_center<track_width*3/8):
+                #Do nothing
+            else:
+                reward -=50000
+                
     ##########
-    # Steering
+    # Around Curve
     ##########
+    else:
+        if abs(steering) > .5 and abs(steering > throttle):
+            reward *= 1 - (steering - throttle)  
+            
+        if abs(car_orientation - next_waypoint_yaw) >= math.radians(10):
+            reward *= 1 - (abs(car_orientation - next_waypoint_yaw) / 180)
+        elif abs(car_orientation - next_waypoint_yaw) < math.radians(10) and abs(steering) > ABS_STEERING_THRESHOLD:    # penalize if stearing to much
+            reward *= ABS_STEERING_THRESHOLD / abs(steering)
+        else:
+            reward *= 1 + (10 - (abs(car_orientation - next_waypoint_yaw) / 10))   
+            
+
 
     # Add penalty for wrong direction
-    next_waypoint_yaw = waypoints[min(closest_waypoint+1, len(waypoints)-1)][-1]
-    if abs(car_orientation - next_waypoint_yaw) >= math.radians(10):
-        reward *= 1 - (abs(car_orientation - next_waypoint_yaw) / 180)
-    elif abs(car_orientation - next_waypoint_yaw) < math.radians(10) and abs(steering) > ABS_STEERING_THRESHOLD:    # penalize if stearing to much
-        reward *= ABS_STEERING_THRESHOLD / abs(steering)
-    else:
-        reward *= 1 + (10 - (abs(car_orientation - next_waypoint_yaw) / 10))
+    
 
+
+
+    
     # Add penalty if throttle exsides the steering else add reward
-    if abs(steering) > .5 and abs(steering > throttle):
-        reward *= 1 - (steering - throttle)
-    else:
-        reward *= 1 + throttle
+
 
     # make sure reward value returned is within the prescribed value range.
     reward = max(reward, REWARD_MIN)
