@@ -13,7 +13,7 @@ def reward_function(params):
     @distance_from_center (float [0, track_width/2]) :: Displacement from the center line of the track
     as defined by way points
 
-    @car_orientation (float: [-3.14, 3.14]) :: yaw of the car with respect to the car's x-axis in
+    @heading (float: [-180, 180]) :: yaw of the car with respect to the car's x-axis in
     radians (-180 degrees, 180 degrees)
 
     @progress (float: [0,1]) :: % of track complete
@@ -22,7 +22,7 @@ def reward_function(params):
 
     @speed :: (float) 0 to c In m/s
 
-    @steering_angle :: (float) -1 to 1 (-1 is right, 1 is left)
+    @steering_angle :: (float) -30 to 30 (-30 is right, 30 is left)
 
     @track_width (float) :: width of the track (> 0)
 
@@ -40,7 +40,7 @@ def reward_function(params):
     x = params["x"]
     y = params["y"]
     distance_from_center = params["distance_from_center"]
-    car_orientation = params["heading"]
+    heading = params["heading"]
     progress = params["progress"]
     steps = params["steps"]
     throttle = params["speed"]
@@ -54,11 +54,11 @@ def reward_function(params):
     Incentivize throttle on straight aways by looking ahead on yaws to detect straight aways
     Incentivize being on the left side being 3/8ths from the wall
     With this model we only use positive reenforcement
-    
     '''
     import math
     from statistics import mean
-
+    SPEED_MAX = 5
+    CURVING_SPEED_MAX=3
     ##########
     # Settings
     ##########
@@ -88,20 +88,29 @@ def reward_function(params):
     
     #Check is Turning
     correction= 0
-    waypoint_yaw = waypoints[closest_waypoints[0]][-1]
-    next_waypoint_yaw = waypoints[min(closest_waypoints[1], len(waypoints)-1)][-1]
-    next_next_waypoint_yaw = waypoints[min(closest_waypoints[1]+1, len(waypoints)-1)][-1]
-    if(abs(waypoint_yaw - next_waypoint_yaw) > math.radians(2)):
+    next_next_point = waypoints[min(closest_waypoints[1]+1, len(waypoints)-1)]
+    next_point = waypoints[closest_waypoints[1]]
+    prev_point = waypoints[closest_waypoints[0]]  
+    
+    track_direction = math.atan2(next_point[1] - prev_point[1], next_point[0] - prev_point[0]) 
+    # Convert to degree
+    track_direction = math.degrees(track_direction)  
+    
+    track_direction_next = math.atan2(next_next_point[1] - next_point[1], next_next_point[0] - next_point[0]) 
+    # Convert to degree
+    track_direction_next = math.degrees(track_direction)
+  
+    if(abs(track_direction) > 3):
         correction +=.5
-    if(abs(next_next_waypoint_yaw - next_waypoint_yaw) > math.radians(2)):
+    if(abs(track_direction_next) > 3):
         correction +=.5
     
     ##########
     # On straight
     ##########
     if correction == 0:
-        if throttle != 1:
-            reward *= max(throttle,.01);
+        if speed != SPEED_MAX:
+            reward *= max(speed/SPEED_MAX,.01);
         if abs(steering) >.1:
             reward *= max(1-abs(steering),.01);
         if is_left_of_center:
@@ -121,15 +130,13 @@ def reward_function(params):
     # Around Curve
     ##########
     else:
-        if abs(steering) > .5 and abs(steering > throttle):
-            reward *= max((1 - (steering - throttle),.01))
-        if abs(car_orientation - next_waypoint_yaw) >= math.radians(10):
-            reward *= max((1 - (abs(car_orientation - next_waypoint_yaw) / 180),.01))
-        elif abs(car_orientation - next_waypoint_yaw) < math.radians(10) and abs(steering) > ABS_STEERING_THRESHOLD:    # penalize if stearing to much
-            reward *= (ABS_STEERING_THRESHOLD / abs(steering))
-        else:
-            reward *= max((1 + (10 - (abs(car_orientation - next_waypoint_yaw) / 10))),.01)
-            
+        if abs(steering) > .5 and abs(steering) > speed/(CURVING_SPEED_MAX*2):
+            reward *= max((1 - (steering - speed/(CURVING_SPEED_MAX*2)),.01))
+        # Calculate the direction in radius, arctan2(dy, dx), the result is (-pi, pi) in radia
+    
+        # Cacluate the difference between the track direction and the heading direction of the car
+        direction_diff = abs(track_direction - heading)
+        reward *= 1-direction_diff/30
 
 
     # make sure reward value returned is within the prescribed value range.
