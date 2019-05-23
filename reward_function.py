@@ -48,7 +48,7 @@ def reward_function(params):
     track_width = params["track_width"]
     waypoints = params["waypoints"]
     is_left_of_center = params["is_left_of_center"]
-    closest_waypoint = params["closest_waypoints"]
+    closest_waypoints = params["closest_waypoints"]
     '''
     Ideas:
     Incentivize throttle on straight aways by looking ahead on yaws to detect straight aways
