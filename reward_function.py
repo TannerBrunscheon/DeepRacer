@@ -112,7 +112,7 @@ def reward_function(params):
         if speed != SPEED_MAX:
             reward *= (speed/SPEED_MAX)**25
         if abs(steering) >.1:
-            reward *= max(1-abs(steering),.01);
+            reward *= (1/(abs(steering)+1))**10;
         if is_left_of_center:
             if (distance_from_center >0 and distance_from_center< track_width/4):
                 reward *= 1.4
@@ -130,7 +130,7 @@ def reward_function(params):
     # Around Curve
     ##########
     else:
-        if abs(steering) > .5 and abs(steering) > speed/(CURVING_SPEED_MAX*2):
+        if abs(steering) > .75 and abs(steering) > speed/(CURVING_SPEED_MAX*2):
             reward *= max((1 - (steering - speed/(CURVING_SPEED_MAX*2)),.01))
         # Calculate the direction in radius, arctan2(dy, dx), the result is (-pi, pi) in radia
     
