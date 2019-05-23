@@ -43,7 +43,7 @@ def reward_function(params):
     heading = params["heading"]
     progress = params["progress"]
     steps = params["steps"]
-    throttle = params["speed"]
+    speed = params["speed"]
     steering = params["steering_angle"] /30
     track_width = params["track_width"]
     waypoints = params["waypoints"]
@@ -100,17 +100,17 @@ def reward_function(params):
     # Convert to degree
     track_direction_next = math.degrees(track_direction)
   
-    if(abs(track_direction) > 3):
-        correction +=.5
-    if(abs(track_direction_next) > 3):
-        correction +=.5
+    if( abs(track_direction-track_direction_next) > 3):
+        correction =True
+    else:
+        correction =False
     
     ##########
     # On straight
     ##########
-    if correction == 0:
+    if not correction:
         if speed != SPEED_MAX:
-            reward *= max(speed/SPEED_MAX,.01);
+            reward *= (speed/SPEED_MAX)**25
         if abs(steering) >.1:
             reward *= max(1-abs(steering),.01);
         if is_left_of_center:
