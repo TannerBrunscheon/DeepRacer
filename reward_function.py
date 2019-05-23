@@ -20,7 +20,7 @@ def reward_function(params):
 
     @steps (int) :: numbers of steps completed. One step is one move by the car
 
-    @throttle :: (float) 0 to 1 (0 indicates stop, 1 max throttle)
+    @speed :: (float) 0 to c (0 indicates stop, 1 max throttle)
 
     @steering :: (float) -1 to 1 (-1 is right, 1 is left)
 
@@ -29,26 +29,26 @@ def reward_function(params):
     @waypoints (ordered list) :: list of waypoint in order; each waypoint is a set of coordinates
     (x,y,yaw) that define a turning point. Defines center.
 
-    @closest_waypoint (int) :: index of the closest waypoint (0-indexed) given the car's x,y
+    @closest_waypoints (int,int) :: index of the closest waypoint (0-indexed) given the car's x,y
     position as measured by the eucliedean distance
     
     @is_left_of_center (bool) :: is left of center
 
     @@output: @reward (float [-1e5, 1e5])
     '''
-    on_track = params["on_track"]
+    on_track = params['all_wheels_on_track']
     x = params["x"]
     y = params["y"]
     distance_from_center = params["distance_from_center"]
-    car_orientation = params["car_orientation"]
+    car_orientation = params["heading"]
     progress = params["progress"]
     steps = params["steps"]
-    throttle = params["throttle"]
-    steering = params["steering"]
+    throttle = params["speed"]
+    steering = params["steering_angle"]
     track_width = params["track_width"]
     waypoints = params["waypoints"]
     is_left_of_center = params["is_left_of_center"]
-    closest_waypoint = params["closest_waypoint"]
+    closest_waypoint = params["closest_waypoints"]
     '''
     Ideas:
     Incentivize throttle on straight aways by looking ahead on yaws to detect straight aways
@@ -84,13 +84,13 @@ def reward_function(params):
         reward = REWARD_MAX
         return reward
     else:        # we want the vehicle to continue making progress
-        reward = REWARD_MAX * max(progress + REWARD_MIN)
+        reward = REWARD_MAX * max(progress, REWARD_MIN)
     
     #Check is Turning
     correction= 0
-    waypoint_yaw = waypoints[closest_waypoint][-1]
-    next_waypoint_yaw = waypoints[min(closest_waypoint+1, len(waypoints)-1)][-1]
-    next_next_waypoint_yaw = waypoints[min(closest_waypoint+2, len(waypoints)-1)][-1]
+    waypoint_yaw = waypoints[closest_waypoints[0]][-1]
+    next_waypoint_yaw = waypoints[min(closest_waypoints[1], len(waypoints)-1)][-1]
+    next_next_waypoint_yaw = waypoints[min(closest_waypoints[1]+1, len(waypoints)-1)][-1]
     if(abs(waypoint_yaw - next_waypoint_yaw) > math.radians(2)):
         correction +=.5
     if(abs(next_next_waypoint_yaw - next_waypoint_yaw) > math.radians(2)):
