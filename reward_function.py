@@ -41,7 +41,7 @@ def reward_function(params):
     y = params["y"]
     distance_from_center = params["distance_from_center"]
     heading = params["heading"]
-    progress = params["progress"]
+    progress = params["progress"]/100
     steps = params["steps"]
     speed = params["speed"]
     steering = params["steering_angle"] /30
@@ -83,8 +83,10 @@ def reward_function(params):
     elif progress == 1:
         reward = REWARD_MAX
         return reward
+    elif progress < .1:
+        reward = REWARD_MAX
     else:        # we want the vehicle to continue making progress
-        reward = REWARD_MAX * max(progress, REWARD_MIN)
+        reward = REWARD_MAX * max(progress,.1)
     
     #Check is Turning
     correction= 0
@@ -109,10 +111,13 @@ def reward_function(params):
     # On straight
     ##########
     if not correction:
-        if speed != SPEED_MAX:
-            reward *= (speed/SPEED_MAX)**25
+        if speed < SPEED_MAX*.8:
+            reward *= (.125*speed)/SPEED_MAX
+        else:
+            reward *= .08*(16**(speed/SPEED_MAX)) 
+            
         if abs(steering) >.1:
-            reward *= (1/(abs(steering)+1))**20;
+            reward *= (1/(abs(steering)+1))**10;
         if is_left_of_center:
             if (distance_from_center >0 and distance_from_center< track_width/4):
                 reward *= 1.4
@@ -130,13 +135,16 @@ def reward_function(params):
     # Around Curve
     ##########
     else:
-        if abs(steering) > .75 and abs(steering) > speed/(CURVING_SPEED_MAX*2):
-            reward *= max((1 - (steering - speed/(CURVING_SPEED_MAX*2)),.01))
+#        if abs(steering) > .75 and abs(steering) > speed/(CURVING_SPEED_MAX*2):
+#            reward *= max((1 - (steering - speed/(CURVING_SPEED_MAX*2)),.01))
         # Calculate the direction in radius, arctan2(dy, dx), the result is (-pi, pi) in radia
     
         # Cacluate the difference between the track direction and the heading direction of the car
         direction_diff = abs(track_direction - heading)
-        reward *= 1-((direction_diff**2/10)/10)
+        if direction_diff <= 3:
+            reward *= 1.1
+        else:
+            reward *= 1-(direction_diff**2/100)
 
 
     # make sure reward value returned is within the prescribed value range.
