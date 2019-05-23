@@ -112,7 +112,7 @@ def reward_function(params):
         if speed != SPEED_MAX:
             reward *= (speed/SPEED_MAX)**25
         if abs(steering) >.1:
-            reward *= (1/(abs(steering)+1))**10;
+            reward *= (1/(abs(steering)+1))**20;
         if is_left_of_center:
             if (distance_from_center >0 and distance_from_center< track_width/4):
                 reward *= 1.4
@@ -136,7 +136,7 @@ def reward_function(params):
     
         # Cacluate the difference between the track direction and the heading direction of the car
         direction_diff = abs(track_direction - heading)
-        reward *= 1-direction_diff/30
+        reward *= 1-((direction_diff**2/10)/10)
 
 
     # make sure reward value returned is within the prescribed value range.
