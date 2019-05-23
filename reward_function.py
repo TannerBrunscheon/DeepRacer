@@ -20,9 +20,9 @@ def reward_function(params):
 
     @steps (int) :: numbers of steps completed. One step is one move by the car
 
-    @speed :: (float) 0 to c (0 indicates stop, 1 max throttle)
+    @speed :: (float) 0 to c In m/s
 
-    @steering :: (float) -1 to 1 (-1 is right, 1 is left)
+    @steering_angle :: (float) -1 to 1 (-1 is right, 1 is left)
 
     @track_width (float) :: width of the track (> 0)
 
@@ -44,7 +44,7 @@ def reward_function(params):
     progress = params["progress"]
     steps = params["steps"]
     throttle = params["speed"]
-    steering = params["steering_angle"]
+    steering = params["steering_angle"] /30
     track_width = params["track_width"]
     waypoints = params["waypoints"]
     is_left_of_center = params["is_left_of_center"]
