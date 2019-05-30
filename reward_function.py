@@ -75,7 +75,7 @@ def reward_function(params):
         #we will adjust things later on
         reward = REWARD_MAX
     elif steps > 0:        # we want the vehicle to continue making progress
-        reward = REWARD_MAX * max(progress, 0.4)
+        reward = REWARD_MAX * (params["progress"] / params["steps"]) * 100
         
     #Check is Turning
     correction= 0
