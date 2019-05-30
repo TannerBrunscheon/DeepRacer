@@ -69,7 +69,7 @@ def reward_function(params):
         return REWARD_MIN
     elif progress == 1:
         #the lap is complete.  if we use more steps than TARGET_STEPS, the reward is lower
-        return REWARD_MAX * TARGET_STEPS / steps
+        return REWARD_MAX 
     elif steps == 0:
         #assuming that the car starts on a straight track, set the base reward to be the maximum
         #we will adjust things later on
