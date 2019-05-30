@@ -46,7 +46,7 @@ def reward_function(params):
     import math
     from statistics import mean
     SPEED_MAX = 5
-    CURVING_SPEED_MAX=3
+    CURVING_SPEED_MAX=4
     ##########
     # Settings
     ##########
